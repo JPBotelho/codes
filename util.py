@@ -1,4 +1,5 @@
 from math import ceil
+import cv2 as cv 
 
 # Returns center of list of FinderPattern (x, y)
 def getCenter(points):
@@ -186,3 +187,24 @@ def alignVertical(gray, center):
         return ((center[0], newCenter), totalSize)
     else:
         return None 
+
+
+def processImage(src):
+    image = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+    image = cv.adaptiveThreshold(image, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 51, 0)
+    image = cv.medianBlur(image, 5)
+    return image
+
+def processPoint(image, point):
+    # Horizontally aligned center
+    # (x, y)
+    horCenter = alignHorizontal(image, point)
+
+    if horCenter is None:
+        return None
+
+    # Vertically aligned center and diameter
+    # (x, y, pattern diameter)
+    patFinder = alignVertical(image, horCenter)
+
+    return patFinder

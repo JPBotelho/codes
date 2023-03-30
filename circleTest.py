@@ -14,16 +14,12 @@ while(True):
         paused = False
     if not paused:
         src = cap.read()[1]
-        gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
-        gray = cv.adaptiveThreshold(gray, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY, 51, 0)
-        gray = cv.medianBlur(gray, 5)
-        
-        rows = gray.shape[0]
-        circles = cv.HoughCircles(gray, cv.HOUGH_GRADIENT, 1, rows / 8,
+        processedImage = u.processImage(src)
+        rows = processedImage.shape[0]
+        circles = cv.HoughCircles(processedImage, cv.HOUGH_GRADIENT, 1, rows / 8,
                                     param1=100, param2=30,
                                     minRadius=1, maxRadius=60)
 
-    if not paused:
         if circles is not None and circles.size / 3 >= 4:
             totalCircles = circles.size / 3
             circles = np.uint16(np.around(circles))
@@ -34,19 +30,8 @@ while(True):
 
                 #i -> (x, y, radius)
                 center = (i[0], i[1])
-                
-                # Horizontally aligned center
-                # (x, y)
-                horCenter = u.alignHorizontal(gray, center)
-
-                if horCenter is None:
-                    totalCircles -= 1
-                    continue
-
-                # Vertically aligned center and diameter
-                # (x, y, pattern diameter)
-                patFinder = u.alignVertical(gray, horCenter)
-
+               
+                patFinder = u.processPoint(processedImage, i)
                 if patFinder is None:
                     totalCircles -= 1
                     continue
