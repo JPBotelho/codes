@@ -4,16 +4,17 @@ import cv2 as cv
 import numpy as np
 from math import ceil, atan2
 import util as u
-
+import copy
 
 cap = cv.VideoCapture(0)
 paused = False
-possibleCenters = []
+
 while(True):
     if(cv.waitKey(1) == 9) and paused:
         paused = False
     if not paused:
         src = cap.read()[1]
+        original = copy.deepcopy(src)
         processedImage = u.processImage(src)
         rows = processedImage.shape[0]
         circles = cv.HoughCircles(processedImage, cv.HOUGH_GRADIENT, 1, rows / 8,
@@ -51,23 +52,33 @@ while(True):
             if totalCircles == 4:
                 # (x, y)
                 sqrCenter = u.getCenter(finderPatterns)
-
+                cv.circle(src, sqrCenter, 1, (0, 255, 0), 3)
                 # (x, y)
                 # Absolute position of corners to be transformed
                 corners = []
-
+                cornerArr = []
                 for i in range(0, len(finderPatterns), 1):
-                    newPos = u.extendPoint(finderPatterns[i], sqrCenter, 1.75)
-
-                    if not u.checkBounds(newPos, src):
+                    # newPos = u.extendPoint(finderPatterns[i], sqrCenter, 1.7)
+                    cornerEst = u.extendPoint(finderPatterns[i], sqrCenter, 1.7 )
+                    newPos = finderPatterns[i]
+                    if not u.checkBounds(cornerEst, src):
                         break
                         
                     # Position of corner relative to center.
+                    cornerArr.append([newPos[0], newPos[1]])
                     corners.append(newPos)
                 if len(corners) == 4:
                     paused = True
+                    cornerArr = sorted(cornerArr, key=lambda c1: u.calcAngle((c1[0], c1[1]), sqrCenter))
                     corners = sorted(corners, key=lambda c1: u.calcAngle(c1, sqrCenter))
-                    # targetRect = [(0, 499), (499, 499), (499, 0), (0, 0)]
+                    cornerArr = np.float32(cornerArr)
+                    #startPos = np.float32(corners)
+                    es = 220//2
+                    l = 1000//2
+                    targetRect = np.float32([[0+es, l-es], [l-es, l-es], [l-es, 0+es], [0+es, 0+es]])
+                    m = cv.getPerspectiveTransform(cornerArr, targetRect)
+                    final = cv.warpPerspective(original, m, (l, l), cv.INTER_NEAREST)
+                    cv.imshow("Output", final)
                     ind = 0
                     for corner in corners:
                         cv.circle(src, corner, 5, (0, 0, 255), 3)
