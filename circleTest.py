@@ -1,10 +1,23 @@
+import array
 import sys
 import cv2 as cv
 import numpy as np
 from math import ceil 
-def processPossibleCenter(image, centers):
+def getCenter(points):
+    xAcc = 0
+    yAcc = 0
+    for point in points:
+        xAcc += point[0][0]
+        yAcc += point[0][1]
+    
+    count = len(points)
 
-    return False
+    return (xAcc // count, yAcc // count)
+
+def extendPoint(finderPattern, center, magnitude):
+    vx = finderPattern[0] - center[0]
+    vy = finderPattern[1] - center[1]
+    return (int(center[0] + vx * magnitude), int(center[1] + vy * magnitude))
 
 def checkRatio(stateCount):
     totalSize = 0
@@ -221,9 +234,14 @@ while(True):
             cv.putText(src, f"Valid circles: {totalCircles}/{circles.size/3}", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
             if totalCircles == 4:
                 paused = True
+                sqrCenter = getCenter(finderPatterns)
+
                 cv.line(src, finderPatterns[3][0], finderPatterns[0][0], (0, 0, 255), 3)
-                for i in range(0, len(finderPatterns)-1, 1):
-                    cv.line(src, finderPatterns[i][0], finderPatterns[i+1][0], (0, 0, 255), 3)
+                for i in range(0, len(finderPatterns), 1):
+                    newPos = extendPoint(finderPatterns[i][0], sqrCenter, 1.75)
+                    cv.circle(src, newPos, 15, (0, 0, 255), 3)
+                    # cv.line(src, finderPatterns[i][0], finderPatterns[i+1][0], (0, 0, 255), 3)
+                cv.circle(src, sqrCenter, 15, (0, 0, 255), 3)
 
 
         cv.imshow("detected circles", src)
