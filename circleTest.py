@@ -36,7 +36,8 @@ def verifyHorizontal(gray, center):
 
     # Paint original center
     # image[center[1]][center[0]] = (0, 0, 255)
-    
+    if(center[1] >= rows):
+        return None
     row = gray[center[1]]
     col = center[0]
     
@@ -89,6 +90,7 @@ def verifyHorizontal(gray, center):
         newCenter = ceil(centerFromEnd(stateCount, col))
         # image[center[1]][newCenter] = (255, 255, 255)
         return (newCenter, center[1])
+        #return (newCenter, center[1])
     else:
         return None    
 
@@ -111,7 +113,7 @@ def verifyVertical(gray, center):
         stateCount[2] += 1
         row -= 1
 
-    if(col < 0):
+    if(row < 0):
         return None
 
     while(row >= 0 and gray[row][col] > 128):
@@ -125,7 +127,7 @@ def verifyVertical(gray, center):
         stateCount[0] += 1
         row -= 1
     
-    if(col < 0):
+    if(row < 0):
         return None
 
     #############
@@ -145,13 +147,18 @@ def verifyVertical(gray, center):
         stateCount[4] += 1
         row += 1
 
-    if(col == cols):
+    if(row == rows):
         return None
 
     if(checkRatio(stateCount)):        
-        newCenter = ceil(centerFromEnd(stateCount, col))
+        newCenter = ceil(centerFromEnd(stateCount, row))
+        
+        totalSize = 0
+        for state in stateCount:
+            totalSize += state
         # image[center[1]][newCenter] = (255, 255, 255)
-        return (newCenter, center[1])
+        #return (newCenter, center[0])
+        return ((center[0], newCenter), totalSize)
     else:
         return None 
 
@@ -184,13 +191,22 @@ while(True):
 
     if not paused:
         if circles is not None:
+            totalCircles = circles.size / 3
             circles = np.uint16(np.around(circles))
+            finderPatterns = []
             for i in circles[0, :]:
                 center = (i[0], i[1])
                 
-                newCenter = verifyHorizontal(gray, src, center)
+                horCenter = verifyHorizontal(gray, center)
+
+                if horCenter is None:
+                    totalCircles -= 1
+                    continue
+
+                newCenter = verifyVertical(gray, horCenter)
 
                 if newCenter is None:
+                    totalCircles -= 1
                     continue
 
                 # circle center
@@ -198,10 +214,17 @@ while(True):
                 # circle outline
                 radius = i[2]
                 cv.circle(src, center, radius, (0, 0, 255), 3)
+                finderPatterns.append(newCenter)
                 # circle new center
-                cv.circle(src, newCenter, 1, (0, 255, 0), 3)
-                cv.circle(src, newCenter, radius, (0, 255, 0), 3)
-            cv.putText(src, f"Circles: {circles.size//3}", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                cv.circle(src, newCenter[0], 1, (0, 255, 0), 3)
+                cv.circle(src, newCenter[0], newCenter[1]//2, (0, 255, 0), 3)
+            cv.putText(src, f"Valid circles: {totalCircles}/{circles.size/3}", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+            if totalCircles == 4:
+                paused = True
+                cv.line(src, finderPatterns[3][0], finderPatterns[0][0], (0, 0, 255), 3)
+                for i in range(0, len(finderPatterns)-1, 1):
+                    cv.line(src, finderPatterns[i][0], finderPatterns[i+1][0], (0, 0, 255), 3)
+
 
         cv.imshow("detected circles", src)
     if cv.waitKey(1)==27:
