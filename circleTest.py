@@ -51,18 +51,28 @@ while(True):
             if totalCircles == 4:
                 # (x, y)
                 sqrCenter = u.getCenter(finderPatterns)
+
+                # (x, y)
+                # Absolute position of corners to be transformed
                 corners = []
+
                 for i in range(0, len(finderPatterns), 1):
                     newPos = u.extendPoint(finderPatterns[i], sqrCenter, 1.75)
+
                     if not u.checkBounds(newPos, src):
                         break
                         
+                    # Position of corner relative to center.
                     corners.append(newPos)
                 if len(corners) == 4:
                     paused = True
+                    corners = sorted(corners, key=lambda c1: u.calcAngle(c1, sqrCenter))
+                    # targetRect = [(0, 499), (499, 499), (499, 0), (0, 0)]
+                    ind = 0
                     for corner in corners:
                         cv.circle(src, corner, 5, (0, 0, 255), 3)
-
+                        cv.putText(src, f"{ind}", corner, cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                        ind += 1
 
 
         cv.imshow("detected circles", src)

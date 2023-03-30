@@ -1,4 +1,4 @@
-from math import ceil
+from math import ceil, atan2
 import cv2 as cv 
 
 # Returns center of list of FinderPattern (x, y)
@@ -208,3 +208,8 @@ def processPoint(image, point):
     patFinder = alignVertical(image, horCenter)
 
     return patFinder
+
+def calcAngle(point, center):
+    y = point[1] - center[1]
+    x = point[0] - center[0]
+    return atan2(y, x)
