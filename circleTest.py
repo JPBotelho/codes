@@ -73,8 +73,8 @@ while(True):
                     corners = sorted(corners, key=lambda c1: u.calcAngle(c1, sqrCenter))
                     cornerArr = np.float32(cornerArr)
                     #startPos = np.float32(corners)
-                    es = 220//2
-                    l = 1000//2
+                    es = 222#//2
+                    l = 1000#//2
                     targetRect = np.float32([[0+es, l-es], [l-es, l-es], [l-es, 0+es], [0+es, 0+es]])
                     m = cv.getPerspectiveTransform(cornerArr, targetRect)
                     final = cv.warpPerspective(original, m, (l, l), cv.INTER_NEAREST)

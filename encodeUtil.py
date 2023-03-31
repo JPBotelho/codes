@@ -10,7 +10,7 @@ WRITE_INDEX = 0
 READ_INDEX = 0
 READ_BYTES = []
 CURR_BYTE = []
-
+READ_STR = ""
 COLOR_YES = (0, 0, 0)
 COLOR_NO = (255, 255, 255)
 
@@ -71,7 +71,6 @@ def calcN(amplitude, distance, bitWidth):
 
 
 def getPositionsInSlice(angleStart, angleStop, dist, n):    
-    global CURR_BYTE, READ_BYTES, READ_INDEX
     amplitude = angleStop - angleStart
     step = amplitude / (2 * n)
     angle = angleStart + step
@@ -88,18 +87,19 @@ def calcAngles(center, amplitude):
     return (center - amplitude // 2, center + amplitude // 2)
         
 def readPos(center, radius, img):
-    global CURR_BYTE, READ_BYTES, READ_INDEX
+    global CURR_BYTE, READ_BYTES, READ_INDEX, READ_STR
 
     accum = 0
     iter = 0
+    radius = radius // 2
     radius = int(radius)
     for x in range(-radius, radius):
-        accum += img.getpixel((center[0]+x, center[1]))[0]
-        accum += img.getpixel((center[0], center[1]+x))[0]
+        accum += img.getpixel((center[0]+x, center[1]))#[0]
+        accum += img.getpixel((center[0], center[1]+x))#[0]
         iter+=2
 
-    val = (accum / iter) < 128
-
+    val = (accum / iter) < 120
+    
     numVal = int(val)
 
     READ_INDEX += 1
@@ -108,11 +108,14 @@ def readPos(center, radius, img):
         intVal = int(byteStr, 2)
         c = chr(intVal)
         READ_BYTES.append(c)
+        READ_STR += c
+        print(intVal)
         CURR_BYTE = []
     CURR_BYTE.append(numVal)
+    return numVal
 
 
-def readRegion(angleAmplitude, angleMiddle, startR, endR, width, img):
+def readRegion(angleAmplitude, angleMiddle, startR, endR, width, img, img1):
     slices = splitIntoSlices(startR, endR, width)
 
     angleStop = angleMiddle + angleAmplitude // 2
@@ -122,8 +125,13 @@ def readRegion(angleAmplitude, angleMiddle, startR, endR, width, img):
         n = calcN(angleAmplitude, slice, width)
         drawPositions = getPositionsInSlice(angleStart, angleStop, slice, n)
         for pos in drawPositions:
-            readPos(pos, width, img)
-            #drawCircle(pos, 2, (255, 0, 0), img, False)
+            bit = readPos(pos, width, img)
+            if(bit == 1):
+                drawCircle(pos, 2, (200), img1, False)
+            else:
+                drawCircle(pos, 2, (100), img1, False)
         # drawSector(angleStart, angleStop, slice, n, color, img, False)
     print(READ_BYTES)
     print(READ_INDEX)
+    print(READ_STR)
+    print(f"Scanned {len(READ_STR)} chars")

@@ -38,27 +38,31 @@ color = (0, 0, 0)
 minDist = 325
 maxDist = 465
 
-drawRegion(70, 90, minDist, maxDist, 16, (255, 0, 0), img1)
+drawRegion(70, 90, minDist, maxDist, 15, (255, 0, 0), img1)
 # en.readRegion(70, 90, minDist, maxDist, 16, img)
 
-drawRegion(70, 0, minDist, maxDist, 16, (255, 0, 0), img1)
+drawRegion(70, 0, minDist, maxDist, 15, (255, 0, 0), img1)
 # en.readRegion(70, 0, minDist, maxDist, 16, img)
 
-drawRegion(70, 180, minDist, maxDist, 16, (255, 0, 0), img1)
+drawRegion(70, 180, minDist, maxDist, 15, (255, 0, 0), img1)
 # en.readRegion(70, 180, minDist, maxDist, 16, img)
 
-drawRegion(70, 270, minDist, maxDist, 16, (255, 0, 0), img1)
+drawRegion(70, 270, minDist, maxDist, 15, (255, 0, 0), img1)
 # en.readRegion(70, 270, minDist, maxDist, 16, img)
 
 scanned = Image.open("out.png", mode="r", formats=None)
-en.readRegion(70, 270, minDist, maxDist, 16, scanned)
-    
-shapeUp = [(500, 500), (500, 0)]
-shapeLeft = [(500, 500), (0, 500)]
+# Grayscale
+scanned = scanned.convert('L')
+# Threshold
+#scanned = scanned.point( lambda p: 255 if p > 200 else 0 )
+# scanned = scanned.convert('1')
+scannedWriter = ImageDraw.Draw(scanned)
+en.readRegion(70, 90, minDist, maxDist, 15, scanned, scannedWriter)
+en.readRegion(70, 0, minDist, maxDist, 15, scanned, scannedWriter)
+en.readRegion(70, 180, minDist, maxDist, 15, scanned, scannedWriter)
+en.readRegion(70, 270, minDist, maxDist, 15, scanned, scannedWriter)
+scanned.show()
 
 print(f"Drew {accum} circles")
 
-# im = np.asarray(img)
-
-print(img.getpixel((222, 222)))
 img.show()
