@@ -33,11 +33,9 @@ def toCart(angle, dist, center):
 def toRad(angle):
     return (angle * -2*pi) / 360
 
-def drawCircle(angle, d, r, col, img, enc):  
+def drawCircle(position, r, col, img, enc):  
     global WRITE_INDEX, COLOR_NO, COLOR_YES, WRITE_DATA      
-    a = toRad(angle)
-    dist = d
-    c = toCart(a, dist, CENTER)
+
     if WRITE_INDEX < len(WRITE_DATA) and enc:
         bit = WRITE_DATA[WRITE_INDEX]
         if bit == 0:
@@ -45,7 +43,8 @@ def drawCircle(angle, d, r, col, img, enc):
         else:
             col = COLOR_YES
         WRITE_INDEX += 1
-    circle(img, c, r, col)
+    circle(img, position, r, col)
+
     
 
 
@@ -65,45 +64,32 @@ def splitIntoSlices(startR, endR, bitWidth):
 
 # Calculate N given the amplitude and radius
 # r must be absolute!!
-def calcN(amplitude, r, bitWidth):
-    slicePerimeter = (amplitude / 360) * (2 * pi * r)
+def calcN(amplitude, distance, bitWidth):
+    slicePerimeter = (amplitude / 360) * (2 * pi * distance)
     n = slicePerimeter // bitWidth
     return n
 
 
-def drawSector(angleStart, angleStop, r, n, col, img, write):    
+def getPositionsInSlice(angleStart, angleStop, dist, n):    
     global CURR_BYTE, READ_BYTES, READ_INDEX
     amplitude = angleStop - angleStart
-    areaPerim = (amplitude / 360) * (2*pi*r)
-    circleRadius = (areaPerim / n) / 2
     step = amplitude / (2 * n)
     angle = angleStart + step
-    #step = (r * 2 * 360) / ( 2 * pi * d *1000)
-    #print(step) 
+
+    positions = [] 
     while angle < angleStop:
-        if(write):
-            drawCircle(angle, r, circleRadius, col, img, True)
-        else:
-            pos = toCart(toRad(angle), r, CENTER)
-            val = readPos(pos, circleRadius, img)
-            READ_INDEX += 1
-            if(len(CURR_BYTE) == 8):
-                byteStr = "".join(str(b) for b in CURR_BYTE[::])
-                intVal = int(byteStr, 2)
-                c = chr(intVal)
-                READ_BYTES.append(c)
-                CURR_BYTE = []
-            CURR_BYTE.append(val)
-            # readCircle
-        # drawCircle(angle, r, 2, (0, 0, 0), img, False)
+        pos = toCart(toRad(angle), dist, CENTER)
+        positions.append(pos)
         angle += step * 2
-    if not write:
-        print("Wait")
+    return positions
+    
 
 def calcAngles(center, amplitude):
     return (center - amplitude // 2, center + amplitude // 2)
         
 def readPos(center, radius, img):
+    global CURR_BYTE, READ_BYTES, READ_INDEX
+
     accum = 0
     iter = 0
     radius = int(radius)
@@ -113,12 +99,20 @@ def readPos(center, radius, img):
         iter+=2
 
     val = (accum / iter) < 128
-    if val: 
-        return 1
-    return 0
+
+    numVal = int(val)
+
+    READ_INDEX += 1
+    if(len(CURR_BYTE) == 8):
+        byteStr = "".join(str(b) for b in CURR_BYTE[::])
+        intVal = int(byteStr, 2)
+        c = chr(intVal)
+        READ_BYTES.append(c)
+        CURR_BYTE = []
+    CURR_BYTE.append(numVal)
 
 
-def readRegion(angleAmplitude, angleMiddle, startR, endR, width, color, img):
+def readRegion(angleAmplitude, angleMiddle, startR, endR, width, img):
     slices = splitIntoSlices(startR, endR, width)
 
     angleStop = angleMiddle + angleAmplitude // 2
@@ -126,6 +120,10 @@ def readRegion(angleAmplitude, angleMiddle, startR, endR, width, color, img):
     # angleAmplitude = angleStop - angleStart
     for slice in slices:
         n = calcN(angleAmplitude, slice, width)
-        drawSector(angleStart, angleStop, slice, n, color, img, False)
+        drawPositions = getPositionsInSlice(angleStart, angleStop, slice, n)
+        for pos in drawPositions:
+            readPos(pos, width, img)
+            #drawCircle(pos, 2, (255, 0, 0), img, False)
+        # drawSector(angleStart, angleStop, slice, n, color, img, False)
     print(READ_BYTES)
     print(READ_INDEX)

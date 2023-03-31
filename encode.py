@@ -18,7 +18,10 @@ def drawRegion(angleAmplitude, angleMiddle, startR, endR, width, color, img):
     # angleAmplitude = angleStop - angleStart
     for slice in slices:
         n = en.calcN(angleAmplitude, slice, width)
-        en.drawSector(angleStart, angleStop, slice, n, color, img, True)
+        positionsInSlice = en.getPositionsInSlice(angleStart, angleStop, slice, n)
+        #en.drawSector(angleStart, angleStop, slice, n, color, img, True)
+        for pos in positionsInSlice:
+            en.drawCircle(pos, width/2, color, img, True)
         accum += n
 
 
@@ -35,19 +38,20 @@ color = (0, 0, 0)
 minDist = 325
 maxDist = 465
 
-drawRegion(70, 90, minDist, maxDist, 15, (255, 0, 0), img1)
-en.readRegion(70, 90, minDist, maxDist, 15, (255, 0, 0), img)
+drawRegion(70, 90, minDist, maxDist, 16, (255, 0, 0), img1)
+# en.readRegion(70, 90, minDist, maxDist, 16, img)
 
-drawRegion(70, 0, minDist, maxDist, 15, (255, 0, 0), img1)
-en.readRegion(70, 0, minDist, maxDist, 15, (255, 0, 0), img)
+drawRegion(70, 0, minDist, maxDist, 16, (255, 0, 0), img1)
+# en.readRegion(70, 0, minDist, maxDist, 16, img)
 
-drawRegion(70, 180, minDist, maxDist, 15, (255, 0, 0), img1)
-en.readRegion(70, 180, minDist, maxDist, 15, (255, 0, 0), img)
+drawRegion(70, 180, minDist, maxDist, 16, (255, 0, 0), img1)
+# en.readRegion(70, 180, minDist, maxDist, 16, img)
 
-drawRegion(70, 270, minDist, maxDist, 15, (255, 0, 0), img1)
-en.readRegion(70, 270, minDist, maxDist, 15, (255, 0, 0), img)
+drawRegion(70, 270, minDist, maxDist, 16, (255, 0, 0), img1)
+# en.readRegion(70, 270, minDist, maxDist, 16, img)
 
-
+scanned = Image.open("out.png", mode="r", formats=None)
+en.readRegion(70, 270, minDist, maxDist, 16, scanned)
     
 shapeUp = [(500, 500), (500, 0)]
 shapeLeft = [(500, 500), (0, 500)]

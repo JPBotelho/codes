@@ -79,11 +79,13 @@ while(True):
                     m = cv.getPerspectiveTransform(cornerArr, targetRect)
                     final = cv.warpPerspective(original, m, (l, l), cv.INTER_NEAREST)
                     cv.imshow("Output", final)
+                    cv.imwrite("out.png", final)
                     ind = 0
                     for corner in corners:
                         cv.circle(src, corner, 5, (0, 0, 255), 3)
                         cv.putText(src, f"{ind}", corner, cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
                         ind += 1
+                    
 
 
         cv.imshow("detected circles", src)
