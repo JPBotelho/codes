@@ -22,7 +22,7 @@ def drawRegion(angleAmplitude, angleMiddle, startR, endR, width, color, img):
 #img = Image.new("RGB", (1000, 1000), color=(255, 255, 255))
 img = Image.open("test.png", mode="r", formats=None)
 img1 = ImageDraw.Draw(img)
-
+en.init_data()
 r = 125
 color = (0, 0, 0)
 # drawSector(0, 360, 270, 90*1.5, (255, 0, 100), img1)
