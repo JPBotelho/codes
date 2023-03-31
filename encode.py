@@ -22,13 +22,19 @@ def drawCircle(angle, d, r, col, img):
     c = toCart(a, dist, center)
     circle(img, c, r, col)
 
-def drawSector(angleStart, angleStop, d, r, col, img):
-    angle = angleStart
-    step = (r * 2 * 360) / ( 2 * pi * d *1000)
+def drawSector(angleStart, angleStop, d, n, col, img):
+    
+    r = d * 1000
+    amplitude = angleStop - angleStart
+    areaPerim = (amplitude / 360) * (2*pi*r)
+    circleRadius = (areaPerim / n) / 2
+    step = amplitude / (2 * n)
+    angle = angleStart + step
+    #step = (r * 2 * 360) / ( 2 * pi * d *1000)
     print(step) 
     while angle < angleStop:
-        drawCircle(angle, d, r, col, img)
-        angle += step
+        drawCircle(angle, d, circleRadius, col, img)
+        angle += step * 2
 
 img = Image.new("RGB", (1000, 1000), color=(255, 255, 255))
 img1 = ImageDraw.Draw(img)
@@ -46,6 +52,13 @@ circle(img1, center, r, color)
 drawCircle(angle=45, d=0.4, r=15, col=(255, 0, 255), img=img1)
 drawCircle(angle=65, d=0.2, r=15, col=(255, 0, 255), img=img1)
 drawSector(90, 180, 0.2, 15, (255, 0, 100), img1)
+drawSector(90, 180, 0.223, 15, (255, 0, 100), img1)
+drawSector(90, 180, 0.246, 16, (255, 0, 100), img1)
+shapeUp = [(500, 500), (500, 0)]
+shapeLeft = [(500, 500), (0, 500)]
+img1.line(shapeUp, fill="red", width = 0)
+img1.line(shapeLeft, fill="red", width = 0)
+
 # drawCircle(45, 0.2, 15, img1, (255, 0, 255))
 # drawCircle(45, 0.6, 15, img1, (255, 0, 255))
 #img1.ellipse((x-r, y-r, x+r, y+r), fill=(255, 255, 255))
