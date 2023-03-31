@@ -5,11 +5,13 @@ SIZE = 1000
 CENTER = (SIZE / 2, SIZE / 2)
 
 accum = 0
-def drawRegion(angleStart, angleStop, startR, endR, width, color, img):
+def drawRegion(angleAmplitude, angleMiddle, startR, endR, width, color, img):
     global accum
     slices = en.splitIntoSlices(startR, endR, width)
 
-    angleAmplitude = angleStop - angleStart
+    angleStop = angleMiddle + angleAmplitude // 2
+    angleStart = angleMiddle - angleAmplitude // 2
+    # angleAmplitude = angleStop - angleStart
     for slice in slices:
         n = en.calcN(angleAmplitude, slice, width)
         en.drawSector(angleStart, angleStop, slice, n, color, img)
@@ -18,7 +20,7 @@ def drawRegion(angleStart, angleStop, startR, endR, width, color, img):
 
 
 #img = Image.new("RGB", (1000, 1000), color=(255, 255, 255))
-img = Image.open("uff.png", mode="r", formats=None)
+img = Image.open("test.png", mode="r", formats=None)
 img1 = ImageDraw.Draw(img)
 
 r = 125
@@ -30,10 +32,16 @@ color = (0, 0, 0)
 # drawSector(0, 360, 330, 114*1.5, (255, 0, 100), img1)
 # drawSector(0, 360, 345, 120*1.5, (255, 0, 100), img1)
 
-drawRegion(60, 122, 262, 365, 15, (255, 0, 0), img1)
-drawRegion(150, 212, 262, 365, 15, (255, 0, 0), img1)
-drawRegion(330, 392, 262, 365, 15, (255, 0, 0), img1)
-drawRegion(240, 302, 262, 365, 15, (255, 0, 0), img1)
+minDist = 325
+maxDist = 465
+
+drawRegion(70, 90, minDist, maxDist, 15, (255, 0, 0), img1)
+drawRegion(70, 0, minDist, maxDist, 15, (255, 0, 0), img1)
+drawRegion(70, 180, minDist, maxDist, 15, (255, 0, 0), img1)
+drawRegion(70, 270, minDist, maxDist, 15, (255, 0, 0), img1)
+# drawRegion(150, 212, minDist, maxDist, 15, (255, 0, 0), img1)
+# drawRegion(330, 392, minDist, maxDist, 15, (255, 0, 0), img1)
+#drawRegion(240, 302, minDist, maxDist, 15, (255, 0, 0), img1)
 
     
 shapeUp = [(500, 500), (500, 0)]
