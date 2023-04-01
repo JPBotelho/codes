@@ -136,13 +136,13 @@ def readPositions(positions, width, img, opencv, imgdraw):
         
         bit = None
         if opencv:
-            bit90 = readPosCV(pos, width, img, 90)
+            bit90 = readPosCV(pos, width, img, 120)
             bit120 = readPosCV(pos, width, img, 120)
-            bit150 = readPosCV(pos, width, img, 150)
+            bit150 = readPosCV(pos, width, img, 120)
         else:
-            bit90 = readPos(pos, width, img, 90)
+            bit90 = readPos(pos, width, img, 120)
             bit120 = readPos(pos, width, img, 120)
-            bit150 = readPos(pos, width, img, 150)
+            bit150 = readPos(pos, width, img, 120)
 
         bits90.append(bit90)
         bits120.append(bit120)
