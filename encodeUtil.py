@@ -89,7 +89,7 @@ def calcAngles(center, amplitude):
     return (center - amplitude // 2, center + amplitude // 2)
         
 
-def readPosCV(center, radius, img):
+def readPosCV(center, radius, img, thres):
     ic = [int(center[0]), int(center[1])]
 
     accum = 0
@@ -101,7 +101,7 @@ def readPosCV(center, radius, img):
         accum += img[ic[1], ic[0]+x]
         iter+=2
 
-    val = (accum / iter) < 120
+    val = (accum / iter) < thres
     
     numVal = int(val)
     col = (255)
@@ -110,7 +110,7 @@ def readPosCV(center, radius, img):
     # cv.circle(img, ic, 2, col, 1)
     return numVal
 
-def readPos(center, radius, img):
+def readPos(center, radius, img, thres):
     accum = 0
     iter = 0
     radius = radius // 2
@@ -120,23 +120,34 @@ def readPos(center, radius, img):
         accum += img.getpixel((center[0], center[1]+x))#[0]
         iter+=2
 
-    val = (accum / iter) < 150
+    val = (accum / iter) < thres
     
     numVal = int(val)
     return numVal
 
 def readPositions(positions, width, img, opencv, imgdraw):
     currByte = []
-    bits = []
+    bits90 = []
+    bits120 = []
+    bits150 = []
+
     outputString = ""
     for pos in positions:
         
         bit = None
         if opencv:
-            bit = readPosCV(pos, width, img)
+            bit90 = readPosCV(pos, width, img, 90)
+            bit120 = readPosCV(pos, width, img, 120)
+            bit150 = readPosCV(pos, width, img, 150)
         else:
-            bit = readPos(pos, width, img)
-        bits.append(bit)
+            bit90 = readPos(pos, width, img, 90)
+            bit120 = readPos(pos, width, img, 120)
+            bit150 = readPos(pos, width, img, 150)
+
+        bits90.append(bit90)
+        bits120.append(bit120)
+        bits150.append(bit150)
+
         #if(len(currByte) == 8):
         #    byteStr = "".join(str(b) for b in currByte[::])
         #    intVal = int(byteStr, 2)
@@ -146,12 +157,12 @@ def readPositions(positions, width, img, opencv, imgdraw):
         #currByte.append(bit)
 
         if(imgdraw is not None):
-            if(bit == 1):
+            if(bit150 == 1):
                 circle(imgdraw, pos, 2, (200))
             else:
                 circle(imgdraw, pos, 2, (100))
 
-    return bits
+    return (bits90, bits120, bits150)
     #return outputString
 
 # Converts characters from str to their binary representation
@@ -208,31 +219,59 @@ def bitArrayToString(data):
 
 def readImage(image):
     DATA_STRING = "HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD!"
-    WRITE_BITS = strToBitArray(DATA_STRING, 283)
+    WRITE_BITS = strToBitArray(DATA_STRING, 50)
     ENCODED_STRING = bitArrayToString(WRITE_BITS)
 
     minDist = 325
     maxDist = 465
-    amplitude = 70
+    amplitude = 65
 
-    reg1 = getPointsInRegion(amplitude, 90, minDist, maxDist, 15)
-    reg2 = getPointsInRegion(amplitude, 0, minDist, maxDist, 15)
-    reg3 = getPointsInRegion(amplitude, 180, minDist, maxDist, 15)
-    reg4 = getPointsInRegion(amplitude, 270, minDist, maxDist, 15)
+    reg1 = getPointsInRegion(amplitude, 90, minDist, maxDist, 35)
+    reg2 = getPointsInRegion(amplitude, 0, minDist, maxDist, 35)
+    reg3 = getPointsInRegion(amplitude, 180, minDist, maxDist, 35)
+    reg4 = getPointsInRegion(amplitude, 270, minDist, maxDist, 35)
 
     readSectors = []
-    readSectors.append(readPositions(reg1, 15, image, True, None))
-    readSectors.append(readPositions(reg2, 15, image, True, None))
-    readSectors.append(readPositions(reg3, 15, image, True, None))
-    readSectors.append(readPositions(reg4, 15, image, True, None))
+    secondaryReadSectors = []
+    thirdSectors = []
+
+    res = readPositions(reg1, 15, image, True, None)
+    readSectors.append(res[0])
+    secondaryReadSectors.append(res[1])
+    thirdSectors.append(res[2])
+
+    res = readPositions(reg2, 15, image, True, None)
+    readSectors.append(res[0])
+    secondaryReadSectors.append(res[1])
+    thirdSectors.append(res[2])
+
+    res = readPositions(reg3, 15, image, True, None)
+    readSectors.append(res[0])
+    secondaryReadSectors.append(res[1])
+    thirdSectors.append(res[2])
+
+    res = readPositions(reg4, 15, image, True, None)
+    readSectors.append(res[0])
+    secondaryReadSectors.append(res[1])
+    thirdSectors.append(res[2])
 
     ret = True
+    
+    goodSectors = 4
     for i in range(len(readSectors)):
-        bitArray = readSectors[i]
-        readString = bitArrayToString(bitArray)
+        readString = bitArrayToString(readSectors[i])
         validity = checkValidity(ENCODED_STRING, readString)
 
-        print(f"Sector {i}: {validity}%")
-        if(validity < 85):
+        secondString = bitArrayToString(secondaryReadSectors[i])
+        secondValidity = checkValidity(ENCODED_STRING, secondString)
+
+        thirdString = bitArrayToString(thirdSectors[i])
+        thirdValidity = checkValidity(ENCODED_STRING, thirdString)
+
+        maxVal = max(validity, secondValidity, thirdValidity)
+        print(f"Sector {i}: {maxVal}%")
+
+        if(maxVal < 90):
+            #continue
             ret = False
     return ret
