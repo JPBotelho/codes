@@ -1,6 +1,6 @@
 from math import cos, sin, pi
 import numpy as np 
-
+import cv2 as cv
 SIZE = 1000
 CENTER = (SIZE // 2, SIZE // 2)
 
@@ -88,6 +88,28 @@ def getPointsInRegion(angleAmplitude, angleMiddle, startR, endR, width):
 def calcAngles(center, amplitude):
     return (center - amplitude // 2, center + amplitude // 2)
         
+
+def readPosCV(center, radius, img):
+    ic = [int(center[0]), int(center[1])]
+
+    accum = 0
+    iter = 0
+    radius = radius // 2
+    radius = int(radius)
+    for x in range(-radius, radius):
+        accum += img[ic[0]+x, ic[1]]
+        accum += img[ic[0], ic[1]+x]
+        iter+=2
+
+    val = (accum / iter) < 150
+    
+    numVal = int(val)
+    col = (255)
+    if(numVal == 1):
+        col = (0)
+    cv.circle(img, ic, 2, col, 1)
+    return numVal
+
 def readPos(center, radius, img):
     accum = 0
     iter = 0
@@ -103,12 +125,12 @@ def readPos(center, radius, img):
     numVal = int(val)
     return numVal
 
-def readPositions(positions, width, img, imgdraw):
+def readPositions(positions, width, img):
     currByte = []
     bits = []
     outputString = ""
     for pos in positions:
-        bit = readPos(pos, width, img)
+        bit = readPosCV(pos, width, img)
         bits.append(bit)
         #if(len(currByte) == 8):
         #    byteStr = "".join(str(b) for b in currByte[::])
@@ -118,12 +140,12 @@ def readPositions(positions, width, img, imgdraw):
         #    currByte = []
         #currByte.append(bit)
 
-        if(bit == 1):
+        #if(bit == 1):
         #    continue
-            circle(imgdraw, pos, 2, (200))
-        else:
+        #    circle(imgdraw, pos, 2, (200))
+        # else:
         #    continue
-            circle(imgdraw, pos, 2, (100))
+        #    circle(imgdraw, pos, 2, (100))
 
     return bits
     #return outputString
@@ -179,3 +201,29 @@ def bitArrayToString(data):
             currByte = []
         currByte.append(data[i])
     return output
+
+def readImage(image):
+    DATA_STRING = "HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD!"
+    WRITE_BITS = strToBitArray(DATA_STRING, 283)
+    ENCODED_STRING = bitArrayToString(WRITE_BITS)
+
+    minDist = 325
+    maxDist = 465
+    amplitude = 70
+
+    reg1 = getPointsInRegion(amplitude, 90, minDist, maxDist, 15)
+    reg2 = getPointsInRegion(amplitude, 0, minDist, maxDist, 15)
+    reg3 = getPointsInRegion(amplitude, 180, minDist, maxDist, 15)
+    reg4 = getPointsInRegion(amplitude, 270, minDist, maxDist, 15)
+
+    readSectors = []
+    readSectors.append(readPositions(reg1, 15, image))
+    readSectors.append(readPositions(reg2, 15, image))
+    readSectors.append(readPositions(reg3, 15, image))
+    readSectors.append(readPositions(reg4, 15, image))
+
+    totalValidity = 0
+    for bitArray in readSectors:
+        readString = bitArrayToString(bitArray)
+        totalValidity += checkValidity(ENCODED_STRING, readString)
+    return totalValidity / 4

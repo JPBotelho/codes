@@ -34,20 +34,14 @@ scanned = scanned.convert('L')
 
 scannedWriter = ImageDraw.Draw(scanned)
 readSectors = []
-readSectors.append(en.readPositions(reg1, 15, scanned, scannedWriter))
-readSectors.append(en.readPositions(reg2, 15, scanned, scannedWriter))
-readSectors.append(en.readPositions(reg3, 15, scanned, scannedWriter))
-readSectors.append(en.readPositions(reg4, 15, scanned, scannedWriter))
+readSectors.append(en.readPositions(reg1, 15, scanned))
+readSectors.append(en.readPositions(reg2, 15, scanned))
+readSectors.append(en.readPositions(reg3, 15, scanned))
+readSectors.append(en.readPositions(reg4, 15, scanned))
 
 for bitArray in readSectors:
     readString = en.bitArrayToString(bitArray)
     validity = en.checkValidity(ENCODED_STRING, readString)
-
-#out += en.readPositions(reg2, 15, scanned, scannedWriter)
-#out += en.readPositions(reg3, 15, scanned, scannedWriter)
-#out += en.readPositions(reg4, 15, scanned, scannedWriter)
-
-# print(out)
 
 scanned.show()
 # img.show()

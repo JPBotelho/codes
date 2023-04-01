@@ -1,6 +1,6 @@
 from math import ceil, atan2
 import cv2 as cv 
-
+import numpy as np
 # Returns center of list of FinderPattern (x, y)
 def getCenter(points):
     xAcc = 0
@@ -213,3 +213,14 @@ def calcAngle(point, center):
     y = point[1] - center[1]
     x = point[0] - center[0]
     return atan2(y, x)
+
+def transformImage(finderPatterns, image):
+    pc = 222#//2
+    l = 1000#//2
+    targetRect = np.float32([[pc, l-pc], [l-pc, l-pc], [l-pc, pc], [pc, pc]])
+
+    m = cv.getPerspectiveTransform(finderPatterns, targetRect)
+
+    result = cv.warpPerspective(image, m, (l, l), cv.INTER_NEAREST)
+
+    return result
