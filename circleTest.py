@@ -65,6 +65,7 @@ while(True):
                     corners.append(newPos)
 
                 if len(corners) == 4:
+                    print("\nEVALUATING NEW THINGS -----")
                     
 
                     corners = sorted(corners, key=lambda c1: u.calcAngle((c1[0], c1[1]), sqrCenter))
@@ -73,9 +74,9 @@ while(True):
                     gray = cv.cvtColor(original, cv.COLOR_BGR2GRAY)
                     final = u.transformImage(floatCorners, gray)
                     final = cv.flip(final, 0)
-                    valididty = en.readImage(final)
+                    readCorrect = en.readImage(final)
 
-                    if(valididty > 1):
+                    if(True):#readCorrect):
                         paused = True
                         cv.imshow("Output", final)
                         cv.imwrite("out.png", final)
@@ -84,7 +85,7 @@ while(True):
                             cv.circle(src, corners[i], 5, (0, 0, 255), 3)
                             cv.putText(src, f"{i}", corners[i], cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
                             i += 1
-                    
+
 
 
         cv.imshow("detected circles", src)

@@ -97,17 +97,17 @@ def readPosCV(center, radius, img):
     radius = radius // 2
     radius = int(radius)
     for x in range(-radius, radius):
-        accum += img[ic[0]+x, ic[1]]
-        accum += img[ic[0], ic[1]+x]
+        accum += img[ic[1]+x, ic[0]]
+        accum += img[ic[1], ic[0]+x]
         iter+=2
 
-    val = (accum / iter) < 150
+    val = (accum / iter) < 120
     
     numVal = int(val)
     col = (255)
     if(numVal == 1):
         col = (0)
-    cv.circle(img, ic, 2, col, 1)
+    # cv.circle(img, ic, 2, col, 1)
     return numVal
 
 def readPos(center, radius, img):
@@ -125,12 +125,17 @@ def readPos(center, radius, img):
     numVal = int(val)
     return numVal
 
-def readPositions(positions, width, img):
+def readPositions(positions, width, img, opencv, imgdraw):
     currByte = []
     bits = []
     outputString = ""
     for pos in positions:
-        bit = readPosCV(pos, width, img)
+        
+        bit = None
+        if opencv:
+            bit = readPosCV(pos, width, img)
+        else:
+            bit = readPos(pos, width, img)
         bits.append(bit)
         #if(len(currByte) == 8):
         #    byteStr = "".join(str(b) for b in currByte[::])
@@ -140,12 +145,11 @@ def readPositions(positions, width, img):
         #    currByte = []
         #currByte.append(bit)
 
-        #if(bit == 1):
-        #    continue
-        #    circle(imgdraw, pos, 2, (200))
-        # else:
-        #    continue
-        #    circle(imgdraw, pos, 2, (100))
+        if(imgdraw is not None):
+            if(bit == 1):
+                circle(imgdraw, pos, 2, (200))
+            else:
+                circle(imgdraw, pos, 2, (100))
 
     return bits
     #return outputString
@@ -175,8 +179,8 @@ def checkValidity(original, data):
         print(f"\nLength of data does not match! (Original = {len(original)}, Data = {len(data)}")
         return 
 
-    print("\n"+original)
-    print(data)
+    # print("\n"+original)
+    # print(data)
     
     matches = 0
     for i in range(len(data)):
@@ -184,7 +188,7 @@ def checkValidity(original, data):
             matches += 1
             
     validity = (matches / len(data)) * 100
-    print(f"{validity}% match!\n")
+    # print(f"{validity}% match!\n")
 
     return validity
 
@@ -217,13 +221,18 @@ def readImage(image):
     reg4 = getPointsInRegion(amplitude, 270, minDist, maxDist, 15)
 
     readSectors = []
-    readSectors.append(readPositions(reg1, 15, image))
-    readSectors.append(readPositions(reg2, 15, image))
-    readSectors.append(readPositions(reg3, 15, image))
-    readSectors.append(readPositions(reg4, 15, image))
+    readSectors.append(readPositions(reg1, 15, image, True, None))
+    readSectors.append(readPositions(reg2, 15, image, True, None))
+    readSectors.append(readPositions(reg3, 15, image, True, None))
+    readSectors.append(readPositions(reg4, 15, image, True, None))
 
-    totalValidity = 0
-    for bitArray in readSectors:
+    ret = True
+    for i in range(len(readSectors)):
+        bitArray = readSectors[i]
         readString = bitArrayToString(bitArray)
-        totalValidity += checkValidity(ENCODED_STRING, readString)
-    return totalValidity / 4
+        validity = checkValidity(ENCODED_STRING, readString)
+
+        print(f"Sector {i}: {validity}%")
+        if(validity < 85):
+            ret = False
+    return ret
