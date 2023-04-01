@@ -2,53 +2,34 @@ from PIL import Image, ImageDraw
 from math import cos, sin, pi
 import encodeUtil as en
 import numpy as np 
-
+import random as rnd
 SIZE = 1000
 CENTER = (SIZE / 2, SIZE / 2)
 
+DATA_STRING = "HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD!"
+WRITE_BITS = []
 
+WRITE_BITS = en.strToBitArray(DATA_STRING, 283)
 
-accum = 0
-def drawRegion(angleAmplitude, angleMiddle, startR, endR, width, color, img):
-    global accum
-    slices = en.splitIntoSlices(startR, endR, width)
-
-    angleStop = angleMiddle + angleAmplitude // 2
-    angleStart = angleMiddle - angleAmplitude // 2
-    # angleAmplitude = angleStop - angleStart
-    for slice in slices:
-        n = en.calcN(angleAmplitude, slice, width)
-        positionsInSlice = en.getPositionsInSlice(angleStart, angleStop, slice, n)
-        #en.drawSector(angleStart, angleStop, slice, n, color, img, True)
-        for pos in positionsInSlice:
-            en.drawCircle(pos, width/2, color, img, True)
-        accum += n
-
-
-
-
-
-#img = Image.new("RGB", (1000, 1000), color=(255, 255, 255))
 img = Image.open("test.png", mode="r", formats=None)
 img1 = ImageDraw.Draw(img)
-en.init_data()
 r = 125
 color = (0, 0, 0)
 
 minDist = 325
 maxDist = 465
 
-drawRegion(70, 90, minDist, maxDist, 15, (255, 0, 0), img1)
-# en.readRegion(70, 90, minDist, maxDist, 16, img)
+regPoints = en.getPointsInRegion(70, 90, minDist, maxDist, 15)
+en.encodePoints(regPoints, WRITE_BITS, 15, (255, 0, 0), img1)
 
-drawRegion(70, 0, minDist, maxDist, 15, (255, 0, 0), img1)
-# en.readRegion(70, 0, minDist, maxDist, 16, img)
+regPoints = en.getPointsInRegion(70, 0, minDist, maxDist, 15)
+en.encodePoints(regPoints, WRITE_BITS, 15, (255, 0, 0), img1)
 
-drawRegion(70, 180, minDist, maxDist, 15, (255, 0, 0), img1)
-# en.readRegion(70, 180, minDist, maxDist, 16, img)
+regPoints = en.getPointsInRegion(70, 180, minDist, maxDist, 15)
+en.encodePoints(regPoints, WRITE_BITS, 15, (255, 0, 0), img1)
 
-drawRegion(70, 270, minDist, maxDist, 15, (255, 0, 0), img1)
-# en.readRegion(70, 270, minDist, maxDist, 16, img)
+regPoints = en.getPointsInRegion(70, 270, minDist, maxDist, 15)
+en.encodePoints(regPoints, WRITE_BITS, 15, (255, 0, 0), img1)
 
 scanned = Image.open("out.png", mode="r", formats=None)
 # Grayscale
@@ -57,12 +38,12 @@ scanned = scanned.convert('L')
 #scanned = scanned.point( lambda p: 255 if p > 200 else 0 )
 # scanned = scanned.convert('1')
 scannedWriter = ImageDraw.Draw(scanned)
-en.readRegion(70, 90, minDist, maxDist, 15, scanned, scannedWriter)
-en.readRegion(70, 0, minDist, maxDist, 15, scanned, scannedWriter)
-en.readRegion(70, 180, minDist, maxDist, 15, scanned, scannedWriter)
-en.readRegion(70, 270, minDist, maxDist, 15, scanned, scannedWriter)
-scanned.show()
+out = en.readRegion(70, 90, minDist, maxDist, 15, scanned, scannedWriter)
+out += en.readRegion(70, 0, minDist, maxDist, 15, scanned, scannedWriter)
+out += en.readRegion(70, 180, minDist, maxDist, 15, scanned, scannedWriter)
+out += en.readRegion(70, 270, minDist, maxDist, 15, scanned, scannedWriter)
 
-print(f"Drew {accum} circles")
+print(out)
+scanned.show()
 
 img.show()

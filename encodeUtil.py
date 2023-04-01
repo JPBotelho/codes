@@ -1,25 +1,13 @@
+from math import cos, sin, pi
+import numpy as np 
+
 SIZE = 1000
 CENTER = (SIZE // 2, SIZE // 2)
 
-from math import cos, sin, pi
-import numpy as np 
-DATA_STRING = "HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD!"
-WRITE_DATA = []
 
-WRITE_INDEX = 0
-READ_INDEX = 0
-READ_BYTES = []
-CURR_BYTE = []
-READ_STR = ""
 COLOR_YES = (0, 0, 0)
 COLOR_NO = (255, 255, 255)
 
-def init_data():
-    for c in DATA_STRING:
-        bits = bin(ord(c))[2:]
-        bits = '00000000'[len(bits):] + bits
-        WRITE_DATA.extend([int(b) for b in bits])
-    # print (DATA)
 def circle(imgDraw, center, r, color):
     x = center[0]
     y = center[1]
@@ -32,21 +20,6 @@ def toCart(angle, dist, center):
 
 def toRad(angle):
     return (angle * -2*pi) / 360
-
-def drawCircle(position, r, col, img, enc):  
-    global WRITE_INDEX, COLOR_NO, COLOR_YES, WRITE_DATA      
-
-    if WRITE_INDEX < len(WRITE_DATA) and enc:
-        bit = WRITE_DATA[WRITE_INDEX]
-        if bit == 0:
-            col = COLOR_NO
-        else:
-            col = COLOR_YES
-        WRITE_INDEX += 1
-    circle(img, position, r, col)
-
-    
-
 
 # Outputs array with values of R, one for each slice. 
 def splitIntoSlices(startR, endR, bitWidth):
@@ -81,13 +54,39 @@ def getPositionsInSlice(angleStart, angleStop, dist, n):
         positions.append(pos)
         angle += step * 2
     return positions
+
+def encodePoints(points, data, width, color, img):
+    if(len(data) != len(points)):
+        print("Number of points to encode doesn't match size of data!")
+        return
+    for i in range(len(points)):
+        point = points[i]
+        bit = data[i]
+        color = COLOR_NO
+        if(bit == 1):
+            color = COLOR_YES
+        circle(img, point, width / 2, color)
+
+def getPointsInRegion(angleAmplitude, angleMiddle, startR, endR, width):
+    slices = splitIntoSlices(startR, endR, width)
+
+    angleStop = angleMiddle + angleAmplitude // 2
+    angleStart = angleMiddle - angleAmplitude // 2
+
+    positionsInRegion = []
+    for slice in slices:
+        n = calcN(angleAmplitude, slice, width)
+        positionsInSlice = getPositionsInSlice(angleStart, angleStop, slice, n)
+
+        for pos in positionsInSlice:
+            positionsInRegion.append(pos)
+    return positionsInRegion
     
 
 def calcAngles(center, amplitude):
     return (center - amplitude // 2, center + amplitude // 2)
         
 def readPos(center, radius, img):
-    global CURR_BYTE, READ_BYTES, READ_INDEX, READ_STR
 
     accum = 0
     iter = 0
@@ -101,37 +100,54 @@ def readPos(center, radius, img):
     val = (accum / iter) < 120
     
     numVal = int(val)
-
-    READ_INDEX += 1
-    if(len(CURR_BYTE) == 8):
-        byteStr = "".join(str(b) for b in CURR_BYTE[::])
-        intVal = int(byteStr, 2)
-        c = chr(intVal)
-        READ_BYTES.append(c)
-        READ_STR += c
-        print(intVal)
-        CURR_BYTE = []
-    CURR_BYTE.append(numVal)
     return numVal
-
 
 def readRegion(angleAmplitude, angleMiddle, startR, endR, width, img, img1):
     slices = splitIntoSlices(startR, endR, width)
 
     angleStop = angleMiddle + angleAmplitude // 2
     angleStart = angleMiddle - angleAmplitude // 2
-    # angleAmplitude = angleStop - angleStart
+
+    currByte = []
+    outputString = ""
     for slice in slices:
         n = calcN(angleAmplitude, slice, width)
         drawPositions = getPositionsInSlice(angleStart, angleStop, slice, n)
         for pos in drawPositions:
             bit = readPos(pos, width, img)
+
+            if(len(currByte) == 8):
+                byteStr = "".join(str(b) for b in currByte[::])
+                intVal = int(byteStr, 2)
+                c = chr(intVal)
+                outputString += c
+                currByte = []
+            currByte.append(bit)
+
             if(bit == 1):
-                drawCircle(pos, 2, (200), img1, False)
+                circle(img1, pos, 2, (200))
             else:
-                drawCircle(pos, 2, (100), img1, False)
-        # drawSector(angleStart, angleStop, slice, n, color, img, False)
-    print(READ_BYTES)
-    print(READ_INDEX)
-    print(READ_STR)
-    print(f"Scanned {len(READ_STR)} chars")
+                circle(img1, pos, 2, (100))
+
+    return outputString
+
+# Converts characters from str to their binary representation
+# If string runs out or size is not multiple of 8, 
+# Pads the end with zeros.
+# Returns array with individual bits (0, 1)
+def strToBitArray(str, size):
+    output = []
+    charIndex = 0 
+    while(len(output) + 8 <= size):
+        if(charIndex >= len(str)):
+            break
+        c = str[charIndex]
+        bits = bin(ord(c))[2:]
+        bits = '00000000'[len(bits):] + bits
+        output.extend([int(b) for b in bits])
+    while(len(output) < size):
+        output.append(0)
+    return output
+
+
+
