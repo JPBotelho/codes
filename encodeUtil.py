@@ -98,33 +98,35 @@ def readPos(center, radius, img):
         accum += img.getpixel((center[0], center[1]+x))#[0]
         iter+=2
 
-    val = (accum / iter) < 120
+    val = (accum / iter) < 150
     
     numVal = int(val)
     return numVal
 
 def readPositions(positions, width, img, imgdraw):
     currByte = []
+    bits = []
     outputString = ""
     for pos in positions:
         bit = readPos(pos, width, img)
-
-        if(len(currByte) == 8):
-            byteStr = "".join(str(b) for b in currByte[::])
-            intVal = int(byteStr, 2)
-            c = chr(intVal)
-            outputString += c
-            currByte = []
-        currByte.append(bit)
+        bits.append(bit)
+        #if(len(currByte) == 8):
+        #    byteStr = "".join(str(b) for b in currByte[::])
+        #    intVal = int(byteStr, 2)
+        #    c = chr(intVal)
+        #    outputString += c
+        #    currByte = []
+        #currByte.append(bit)
 
         if(bit == 1):
-            continue
-            #circle(imgdraw, pos, 2, (200))
+        #    continue
+            circle(imgdraw, pos, 2, (200))
         else:
-            continue
-            #circle(imgdraw, pos, 2, (100))
+        #    continue
+            circle(imgdraw, pos, 2, (100))
 
-    return outputString
+    return bits
+    #return outputString
 
 # Converts characters from str to their binary representation
 # If string runs out or size is not multiple of 8, 
@@ -140,6 +142,40 @@ def strToBitArray(str, size):
         bits = bin(ord(c))[2:]
         bits = '00000000'[len(bits):] + bits
         output.extend([int(b) for b in bits])
+        charIndex += 1
     while(len(output) < size):
         output.append(0)
+    return output
+
+
+def checkValidity(original, data):
+    if(len(original) != len(data)):
+        print(f"\nLength of data does not match! (Original = {len(original)}, Data = {len(data)}")
+        return 
+
+    print("\n"+original)
+    print(data)
+    
+    matches = 0
+    for i in range(len(data)):
+        if(original[i] == data[i]):
+            matches += 1
+            
+    validity = (matches / len(data)) * 100
+    print(f"{validity}% match!\n")
+
+    return validity
+
+def bitArrayToString(data):
+    currByte = []
+    output = ""
+
+    for i in range(len(data)):
+        if len(currByte) == 8:
+            byteStr = "".join(str(b) for b in currByte[::])
+            intVal = int(byteStr, 2)
+            c = chr(intVal)
+            output += c
+            currByte = []
+        currByte.append(data[i])
     return output

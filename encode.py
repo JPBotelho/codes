@@ -9,6 +9,7 @@ DATA_STRING = "HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WO
 WRITE_BITS = []
 
 WRITE_BITS = en.strToBitArray(DATA_STRING, 283)
+ENCODED_STRING = en.bitArrayToString(WRITE_BITS)
 
 img = Image.open("test.png", mode="r", formats=None)
 imgDraw = ImageDraw.Draw(img)
@@ -27,26 +28,26 @@ en.encodePoints(reg2, WRITE_BITS, 15, imgDraw)
 en.encodePoints(reg3, WRITE_BITS, 15, imgDraw)
 en.encodePoints(reg4, WRITE_BITS, 15, imgDraw)
 
-start_time = time.time()
-
 scanned = Image.open("out.png", mode="r", formats=None)
-# Grayscale
 scanned = scanned.convert('L')
-# Threshold
 #scanned = scanned.point( lambda p: 255 if p > 200 else 0 )
 
 scannedWriter = ImageDraw.Draw(scanned)
+readSectors = []
+readSectors.append(en.readPositions(reg1, 15, scanned, scannedWriter))
+readSectors.append(en.readPositions(reg2, 15, scanned, scannedWriter))
+readSectors.append(en.readPositions(reg3, 15, scanned, scannedWriter))
+readSectors.append(en.readPositions(reg4, 15, scanned, scannedWriter))
 
-out = en.readPositions(reg1, 15, scanned, scannedWriter)
-out += en.readPositions(reg2, 15, scanned, scannedWriter)
-out += en.readPositions(reg3, 15, scanned, scannedWriter)
-out += en.readPositions(reg4, 15, scanned, scannedWriter)
+for bitArray in readSectors:
+    readString = en.bitArrayToString(bitArray)
+    validity = en.checkValidity(ENCODED_STRING, readString)
 
-duration = time.time() - start_time
+#out += en.readPositions(reg2, 15, scanned, scannedWriter)
+#out += en.readPositions(reg3, 15, scanned, scannedWriter)
+#out += en.readPositions(reg4, 15, scanned, scannedWriter)
 
-print(f"Duration: {duration}")
-
-print(out)
+# print(out)
 
 scanned.show()
-img.show()
+# img.show()

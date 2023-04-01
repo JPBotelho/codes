@@ -79,6 +79,7 @@ while(True):
                     m = cv.getPerspectiveTransform(cornerArr, targetRect)
                     final = cv.warpPerspective(original, m, (l, l), cv.INTER_NEAREST)
                     cv.imshow("Output", final)
+                    final = cv.flip(final, 0)
                     cv.imwrite("out.png", final)
                     ind = 0
                     for corner in corners:
