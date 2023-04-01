@@ -8,11 +8,6 @@ CENTER = (SIZE // 2, SIZE // 2)
 COLOR_YES = (0, 0, 0)
 COLOR_NO = (255, 255, 255)
 
-def circle(imgDraw, center, r, color):
-    x = center[0]
-    y = center[1]
-    imgDraw.ellipse((x-r, y-r, x+r, y+r), fill=color)
-
 def toCart(angle, dist, center):
     x = dist * cos(angle)
     y = dist * sin(angle)
@@ -20,6 +15,11 @@ def toCart(angle, dist, center):
 
 def toRad(angle):
     return (angle * -2*pi) / 360
+
+def circle(imgDraw, center, r, color):
+    x = center[0]
+    y = center[1]
+    imgDraw.ellipse((x-r, y-r, x+r, y+r), fill=color)
 
 # Outputs array with values of R, one for each slice. 
 def splitIntoSlices(startR, endR, bitWidth):
@@ -55,7 +55,7 @@ def getPositionsInSlice(angleStart, angleStop, dist, n):
         angle += step * 2
     return positions
 
-def encodePoints(points, data, width, color, img):
+def encodePoints(points, data, width, color, imgDraw):
     if(len(data) != len(points)):
         print("Number of points to encode doesn't match size of data!")
         return
@@ -65,7 +65,7 @@ def encodePoints(points, data, width, color, img):
         color = COLOR_NO
         if(bit == 1):
             color = COLOR_YES
-        circle(img, point, width / 2, color)
+        circle(imgDraw, point, width / 2, color)
 
 def getPointsInRegion(angleAmplitude, angleMiddle, startR, endR, width):
     slices = splitIntoSlices(startR, endR, width)
@@ -87,13 +87,12 @@ def calcAngles(center, amplitude):
     return (center - amplitude // 2, center + amplitude // 2)
         
 def readPos(center, radius, img):
-
     accum = 0
     iter = 0
     radius = radius // 2
     radius = int(radius)
     for x in range(-radius, radius):
-        accum += img.getpixel((center[0]+x, center[1]))#[0]
+        accum += img.getpixel((center[0]+x, center[1]))
         accum += img.getpixel((center[0], center[1]+x))#[0]
         iter+=2
 
@@ -102,32 +101,24 @@ def readPos(center, radius, img):
     numVal = int(val)
     return numVal
 
-def readRegion(angleAmplitude, angleMiddle, startR, endR, width, img, img1):
-    slices = splitIntoSlices(startR, endR, width)
-
-    angleStop = angleMiddle + angleAmplitude // 2
-    angleStart = angleMiddle - angleAmplitude // 2
-
+def readPositions(positions, width, img, imgdraw):
     currByte = []
     outputString = ""
-    for slice in slices:
-        n = calcN(angleAmplitude, slice, width)
-        drawPositions = getPositionsInSlice(angleStart, angleStop, slice, n)
-        for pos in drawPositions:
-            bit = readPos(pos, width, img)
+    for pos in positions:
+        bit = readPos(pos, width, img)
 
-            if(len(currByte) == 8):
-                byteStr = "".join(str(b) for b in currByte[::])
-                intVal = int(byteStr, 2)
-                c = chr(intVal)
-                outputString += c
-                currByte = []
-            currByte.append(bit)
+        if(len(currByte) == 8):
+            byteStr = "".join(str(b) for b in currByte[::])
+            intVal = int(byteStr, 2)
+            c = chr(intVal)
+            outputString += c
+            currByte = []
+        currByte.append(bit)
 
-            if(bit == 1):
-                circle(img1, pos, 2, (200))
-            else:
-                circle(img1, pos, 2, (100))
+        if(bit == 1):
+            circle(imgdraw, pos, 2, (200))
+        else:
+            circle(imgdraw, pos, 2, (100))
 
     return outputString
 
