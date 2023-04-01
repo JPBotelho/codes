@@ -4,7 +4,6 @@ import numpy as np
 SIZE = 1000
 CENTER = (SIZE // 2, SIZE // 2)
 
-
 COLOR_YES = (0, 0, 0)
 COLOR_NO = (255, 255, 255)
 
@@ -33,6 +32,7 @@ def splitIntoSlices(startR, endR, bitWidth):
     for i in range(n - 1):
         firstPos += bitWidth
         slices.append(firstPos)
+
     return slices
 
 # Calculate N given the amplitude and radius
@@ -55,7 +55,8 @@ def getPositionsInSlice(angleStart, angleStop, dist, n):
         angle += step * 2
     return positions
 
-def encodePoints(points, data, width, color, imgDraw):
+# Encodes given set of points with given data based on YES/NO global color.
+def encodePoints(points, data, width, imgDraw):
     if(len(data) != len(points)):
         print("Number of points to encode doesn't match size of data!")
         return
@@ -67,6 +68,7 @@ def encodePoints(points, data, width, color, imgDraw):
             color = COLOR_YES
         circle(imgDraw, point, width / 2, color)
 
+# Returns array with the center position of all the points in a region
 def getPointsInRegion(angleAmplitude, angleMiddle, startR, endR, width):
     slices = splitIntoSlices(startR, endR, width)
 
@@ -82,7 +84,7 @@ def getPointsInRegion(angleAmplitude, angleMiddle, startR, endR, width):
             positionsInRegion.append(pos)
     return positionsInRegion
     
-
+# Calculates startAngle and endAngle given a center angle and an amplitude
 def calcAngles(center, amplitude):
     return (center - amplitude // 2, center + amplitude // 2)
         
@@ -116,9 +118,11 @@ def readPositions(positions, width, img, imgdraw):
         currByte.append(bit)
 
         if(bit == 1):
-            circle(imgdraw, pos, 2, (200))
+            continue
+            #circle(imgdraw, pos, 2, (200))
         else:
-            circle(imgdraw, pos, 2, (100))
+            continue
+            #circle(imgdraw, pos, 2, (100))
 
     return outputString
 
@@ -139,6 +143,3 @@ def strToBitArray(str, size):
     while(len(output) < size):
         output.append(0)
     return output
-
-
-
