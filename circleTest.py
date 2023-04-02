@@ -78,7 +78,7 @@ while(True):
                     readCorrect = en.readImage(final)
 
                     if(readCorrect):
-                        paused = True
+                        #paused = True
                         cv.imshow("Output", final)
                         cv.imwrite("out.png", final)
 

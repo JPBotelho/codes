@@ -36,7 +36,7 @@ scannedWriter = ImageDraw.Draw(scanned)
 readSectors = []
 secondarySectors = []
 thirdSectors = []
-
+sectors = []
 readRes = en.readPositions(reg1, 15, scanned, False, scannedWriter)
 readSectors.append(readRes[0])
 secondarySectors.append(readRes[1])

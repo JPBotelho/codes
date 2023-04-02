@@ -136,13 +136,13 @@ def readPositions(positions, width, img, opencv, imgdraw):
         
         bit = None
         if opencv:
-            bit90 = readPosCV(pos, width, img, 120)
+            bit90 = readPosCV(pos, width, img, 90)
             bit120 = readPosCV(pos, width, img, 120)
-            bit150 = readPosCV(pos, width, img, 120)
+            bit150 = readPosCV(pos, width, img, 150)
         else:
-            bit90 = readPos(pos, width, img, 120)
+            bit90 = readPos(pos, width, img, 90)
             bit120 = readPos(pos, width, img, 120)
-            bit150 = readPos(pos, width, img, 120)
+            bit150 = readPos(pos, width, img, 150)
 
         bits90.append(bit90)
         bits120.append(bit120)
@@ -271,7 +271,70 @@ def readImage(image):
         maxVal = max(validity, secondValidity, thirdValidity)
         print(f"Sector {i}: {maxVal}%")
 
-        if(maxVal < 90):
+        if(maxVal < 95):
             #continue
-            ret = False
+            ret = True
     return ret
+
+
+# Returns data with hamming codes
+def encodeData():
+    return None
+
+# Encodes a singular block of data with hamming codes
+# 4 bits data
+# 4 bits parity
+def encodeBlock(data):
+    if(len(data) != 4):
+        print("WRONG DATA SIZE")
+        return None
+
+    encodedData = [0] * 8
+    p1 = data[0] ^ data[1] ^ data[3]
+    p2 = data[0] ^ data[2] ^ data[3]
+    p3 = data[1] ^ data[2] ^ data[3]
+    p4 = p1 ^ p2 ^ p3 ^ data[0] ^ data[1] ^ data[2] ^ data[3]
+
+    encodedData[0] = p4
+    encodedData[1] = p1
+    encodedData[2] = p2
+    encodedData[4] = p3
+
+    encodedData[3] = data[0]
+    encodedData[5] = data[1]
+    encodedData[6] = data[2]
+    encodedData[7] = data[3]
+    return encodedData
+     
+# returns none if error detected
+def decodeBlock(data):
+    if(len(data) != 8):
+        print("Wrong block size to decode!")
+        return None
+    overallParity = 0
+    errorPos = 0
+    for i in range(1, len(data)):
+        overallParity = overallParity ^ data[i]
+        if data[i] == 1:
+            errorPos = errorPos ^ i
+
+    # Error detected
+    if errorPos is not 0:
+        # Overall parity doesnt match (1 error, fix it)
+        if overallParity != data[0]:
+            wrongBit = data[errorPos]
+            if wrongBit == 1:
+                data[errorPos] = 0
+            else:
+                data[errorPos] = 1
+        # Error detected but overall parity matches: 2 errors
+        else:
+            print("2 errors in block.")
+            return None
+
+    data.pop(4)
+    data.pop(2)
+    data.pop(1)
+    data.pop(0)
+    
+    return data
