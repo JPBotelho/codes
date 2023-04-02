@@ -1,13 +1,15 @@
 import encodeUtil as en
 
-data = [ 0b00001010, 0b10011001 ]
+data = [ 10, 153 ]
 
-processed = en.encode(data, 16, 3)
-
-print(processed)
+processed = en.encode(data, 16, 1)
 processedBit = en.byteArrayToBitArray(processed)
-print(processedBit)
-
 decoded = en.decode(processedBit)
 
-print(decoded)
+sectorId = decoded[0]
+dataLength = decoded[1]
+readData = decoded[2]
+
+print(f"Sector: {sectorId}")
+print(f"Length: {dataLength}")
+print(f"Data: {readData}")

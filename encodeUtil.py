@@ -1,4 +1,4 @@
-from math import cos, sin, pi
+from math import cos, sin, pi, ceil
 import numpy as np 
 import cv2 as cv
 import random
@@ -279,7 +279,7 @@ def readImage(image):
     return ret
 
 def calculateChecksum(data):
-    output = 0b00000000
+    output = 0
     for byte in data:
         if(byte > 255):
             print("Not a byte!")
@@ -307,62 +307,47 @@ def encode(data, length, id):
     return data
 
 def bitArrayToByteArray(data):
+    if(len(data) != 64):
+        print("Invalid data size!")
+        return None
+        
     bytes = []
 
     currentVal = 0
     bitsProcessed = 0
-    for bit in bytes:
-        bitsProcessed += 1
+    for bit in data:
         currentVal += bit * (1 << (8 - bitsProcessed - 1))
-
+        bitsProcessed += 1
         if bitsProcessed == 8:
-            bytes.add(currentVal)
+            bytes.append(currentVal)
             currentVal = 0
             bitsProcessed = 0
 
     return bytes
+ 
+def decode(bitArray):
+    bytes = bitArrayToByteArray(bitArray)
 
-def decode(data):
-    if(len(data) != 64):
-        print("Invalid data length!")
-        return None
-    
-    calculatedChecksum = 0
-    readChecksum = 0
-    currentByte = 0
-    bytes = []
-    bitsProcessed = 0
-    dataLength = 16
-    sectorId = 0
-    for bit in data:
-        dataLength-= 1
-        currentByte += bit * (1 << (8 - bitsProcessed - 1))
-        bitsProcessed += 1
-        if bitsProcessed == 8:
-            if(len(bytes) == 0):
-                readChecksum = currentByte
-            else:
-                calculatedChecksum = calculatedChecksum ^ currentByte
+    readChecksum = bytes[0]
+    checksum = calculateChecksum(bytes[1:])
 
-            # Length and id bit
-            if(len(bytes)==1):
-                dataLength += currentByte >> 2
-                sectorId = currentByte & 3
+    infoByte = bytes[1]
 
-            if(dataLength > 0):
-                bytes.append(currentByte)
-            currentByte = 0
-            bitsProcessed = 0
+    # Sector information is in last 2 bits of info byte
+    sectorId = infoByte & 3
 
-    if(readChecksum != calculatedChecksum):
-        print(f"Checksums don't match!: {readChecksum} vs {calculatedChecksum}")
+    # Data length is 6 MSB of info byte
+    dataLength = infoByte >> 2
 
+    numBytes = ceil(dataLength / 8)
+
+    finalData = bytes[2:2+numBytes]
+
+    if(readChecksum != checksum):
+        print("Checksums don't match!")
         return None
 
-    print(f"Data Length: {dataLength}")
-    print(f"Sector: {sectorId}")
-
-    return bytes
+    return (sectorId, dataLength, finalData)
 
 def byteArrayToBitArray(data):
     output = []
