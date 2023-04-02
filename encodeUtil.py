@@ -319,6 +319,10 @@ def decode(bitArray):
 
     finalData = bytes[2:2+numBytes]
     
+    s = ""
+    for byte in finalData:
+        s += (chr(int(byte)))
+
     if(sectorId < 0 or sectorId > 3):
         print("Invalid read!")
         return None
@@ -327,7 +331,7 @@ def decode(bitArray):
         print("Checksums don't match!")
         return None
 
-    return (sectorId, dataLength, finalData)
+    return (sectorId, dataLength, s)
 
 def byteArrayToBitArray(data):
     output = []
@@ -339,4 +343,8 @@ def byteArrayToBitArray(data):
     return output
 
 
-        
+def encodeString(s, sector):
+    length = len(s) * 8
+    bitArr = strToBitArray(s, length)
+    byteArr = bitArrayToByteArray(bitArr)
+    return byteArrayToBitArray(encode(byteArr, length, sector))

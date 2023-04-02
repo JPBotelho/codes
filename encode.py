@@ -9,12 +9,12 @@ import time
 text = "TESTE"
 bitArr = en.strToBitArray(text, 40)
 byteArr = en.bitArrayToByteArray(bitArr)
-encodedData1 = en.byteArrayToBitArray(en.encode(byteArr, 40, 0))
-encodedData2 = en.byteArrayToBitArray(en.encode(byteArr, 40, 1))
-encodedData3 = en.byteArrayToBitArray(en.encode(byteArr, 40, 2))
-encodedData4 = en.byteArrayToBitArray(en.encode(byteArr, 40, 3))
+encodedData1 = en.encodeString("SECT0", 0)
+encodedData2 = en.encodeString("SECT1", 1)
+encodedData3 = en.encodeString("SECT2", 2)
+encodedData4 = en.encodeString("SECT3", 3)
 
-img = Image.open("test.png", mode="r", formats=None)
+img = Image.open("test2.png", mode="r", formats=None)
 imgDraw = ImageDraw.Draw(img)
 
 minDist = 325
