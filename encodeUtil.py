@@ -127,44 +127,34 @@ def readPos(center, radius, img, thres):
     numVal = int(val)
     return numVal
 
-def readPositions(positions, width, img, opencv, imgdraw):
+def readPositions(positions, width, img, opencv, imgdraw, thres):
     currByte = []
-    bits90 = []
-    bits120 = []
-    bits150 = []
+    bits = []
 
     outputString = ""
     for pos in positions:
         
         bit = None
         if opencv:
-            bit90 = readPosCV(pos, width, img, 90)
-            bit120 = readPosCV(pos, width, img, 120)
-            bit150 = readPosCV(pos, width, img, 150)
+            bit = readPosCV(pos, width, img, thres)
+            # bit90 = readPosCV(pos, width, img, 90)
+            # bit120 = readPosCV(pos, width, img, 120)
+            # bit150 = readPosCV(pos, width, img, 150)
         else:
-            bit90 = readPos(pos, width, img, 90)
-            bit120 = readPos(pos, width, img, 120)
-            bit150 = readPos(pos, width, img, 150)
+            bit = readPos(pos, width, img, thres)
+            #bit90 = readPos(pos, width, img, 90)
+            #bit120 = readPos(pos, width, img, 120)
+            #bit150 = readPos(pos, width, img, 150)
 
-        bits90.append(bit90)
-        bits120.append(bit120)
-        bits150.append(bit150)
-
-        #if(len(currByte) == 8):
-        #    byteStr = "".join(str(b) for b in currByte[::])
-        #    intVal = int(byteStr, 2)
-        #    c = chr(intVal)
-        #    outputString += c
-        #    currByte = []
-        #currByte.append(bit)
+        bits.append(bit)
 
         if(imgdraw is not None):
-            if(bit120 == 1):
+            if(bit == 1):
                 circle(imgdraw, pos, 2, (200))
             else:
                 circle(imgdraw, pos, 2, (100))
 
-    return (bits90, bits120, bits150)
+    return bits
     #return outputString
 
 # Converts characters from str to their binary representation
@@ -219,11 +209,22 @@ def bitArrayToString(data):
         currByte.append(data[i])
     return output
 
-def readImage(image):
-    DATA_STRING = "HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD! HELLO, WORLD!"
-    WRITE_BITS = strToBitArray(DATA_STRING, 50)
-    ENCODED_STRING = bitArrayToString(WRITE_BITS)
+def tryReadPositions(positions, width, image, opencv, scannedWriter):
+    bits = readPositions(positions, width, image, opencv, scannedWriter, 90)
+    data = decode(bits)
+    if data is None:
+        bits = readPositions(positions, width, image, opencv, scannedWriter, 120)
+        data = decode(bits)
+        
+        if data is None: 
+            bits = readPositions(positions, width, image, opencv, scannedWriter, 150)
+            data = decode(bits)
 
+            if data is None:
+                return None
+    return data
+
+def readImage(image):
     minDist = 325
     maxDist = 465
     amplitude = 65
@@ -233,50 +234,26 @@ def readImage(image):
     reg3 = getPointsInRegion(amplitude, 180, minDist, maxDist, 30)
     reg4 = getPointsInRegion(amplitude, 270, minDist, maxDist, 30)
 
-    readSectors = []
-    secondaryReadSectors = []
-    thirdSectors = []
+    totalData = []
 
-    res = readPositions(reg1, 15, image, True, None)
-    readSectors.append(res[0])
-    secondaryReadSectors.append(res[1])
-    thirdSectors.append(res[2])
+    data = tryReadPositions(reg1, 30, image, True, None)
+    if data is None:
+        return None
+    totalData.append(data[2])
+    data = tryReadPositions(reg2, 30, image, True, None)
+    if data is None:
+        return None
+    totalData.append(data[2])
+    data = tryReadPositions(reg3, 30, image, True, None)
+    if data is None:
+        return None
+    totalData.append(data[2])
+    data = tryReadPositions(reg4, 30, image, True, None)
+    if data is None:
+        return None
 
-    res = readPositions(reg2, 15, image, True, None)
-    readSectors.append(res[0])
-    secondaryReadSectors.append(res[1])
-    thirdSectors.append(res[2])
-
-    res = readPositions(reg3, 15, image, True, None)
-    readSectors.append(res[0])
-    secondaryReadSectors.append(res[1])
-    thirdSectors.append(res[2])
-
-    res = readPositions(reg4, 15, image, True, None)
-    readSectors.append(res[0])
-    secondaryReadSectors.append(res[1])
-    thirdSectors.append(res[2])
-
-    ret = True
-    
-    goodSectors = 4
-    for i in range(len(readSectors)):
-        readString = bitArrayToString(readSectors[i])
-        validity = checkValidity(ENCODED_STRING, readString)
-
-        secondString = bitArrayToString(secondaryReadSectors[i])
-        secondValidity = checkValidity(ENCODED_STRING, secondString)
-
-        thirdString = bitArrayToString(thirdSectors[i])
-        thirdValidity = checkValidity(ENCODED_STRING, thirdString)
-
-        maxVal = max(validity, secondValidity, thirdValidity)
-        print(f"Sector {i}: {maxVal}%")
-
-        if(maxVal < 100):
-            #continue
-            ret = False
-    return ret
+    totalData.append(data[2])
+    return totalData
 
 def calculateChecksum(data):
     output = 0
@@ -289,7 +266,8 @@ def calculateChecksum(data):
     return output
 
 # Max size is 48 bits per sector
-def encode(data, length, id):
+def encode(originalData, length, id):
+    data = originalData.copy()
     if(len(data) > 6):
         print("Too many bytes!")
     
@@ -299,7 +277,7 @@ def encode(data, length, id):
     data.insert(0, int(infoByte, 2))
     
 
-    while len(data) < 7:
+    while len(data) < 6:
         data.append(random.randint(0, 255))
 
     checksum = calculateChecksum(data)
@@ -307,9 +285,9 @@ def encode(data, length, id):
     return data
 
 def bitArrayToByteArray(data):
-    if(len(data) != 64):
-        print("Invalid data size!")
-        return None
+    #if(len(data) != 64):
+    #    print("Invalid data size!")
+    #    return None
         
     bytes = []
 
@@ -340,8 +318,10 @@ def decode(bitArray):
     dataLength = infoByte >> 2
 
     numBytes = ceil(dataLength / 8)
-
-    finalData = bytes[2:2+numBytes]
+    finalData = ""
+    for byte in bytes[2:2+numBytes]:
+        finalData += chr(byte)
+    # finalData = chr(b) from b inbytes[2:2+numBytes]
 
     if(readChecksum != checksum):
         print("Checksums don't match!")
@@ -357,3 +337,6 @@ def byteArrayToBitArray(data):
         output.extend([int(b) for b in bits])
 
     return output
+
+
+        

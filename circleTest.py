@@ -75,10 +75,12 @@ while(True):
                     final = u.transformImage(floatCorners, original)
                     final = cv.cvtColor(final, cv.COLOR_BGR2GRAY)
                     final = cv.flip(final, 0)
-                    readCorrect = en.readImage(final)
-
-                    if(readCorrect):
+                    readData = en.readImage(final)
+                    if readData is not None:
                         paused = True
+                        #print(f"Sector: {readData[0]}")
+                        #print(f"Length: {readData[1]}")
+                        print(f"Data: {readData}")
                         cv.imshow("Output", final)
                         cv.imwrite("out.png", final)
 
