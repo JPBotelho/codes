@@ -220,8 +220,6 @@ def tryReadPositions(positions, width, image, opencv, scannedWriter):
             bits = readPositions(positions, width, image, opencv, scannedWriter, 150)
             data = decode(bits)
 
-            if data is None:
-                return None
     return data
 
 def readImage(image):
@@ -239,20 +237,20 @@ def readImage(image):
     data = tryReadPositions(reg1, 30, image, True, None)
     if data is None:
         return None
-    totalData.append(data[2])
+    totalData.append(data)
     data = tryReadPositions(reg2, 30, image, True, None)
     if data is None:
         return None
-    totalData.append(data[2])
+    totalData.append(data)
     data = tryReadPositions(reg3, 30, image, True, None)
     if data is None:
         return None
-    totalData.append(data[2])
+    totalData.append(data)
     data = tryReadPositions(reg4, 30, image, True, None)
     if data is None:
         return None
 
-    totalData.append(data[2])
+    totalData.append(data)
     return totalData
 
 def calculateChecksum(data):
@@ -318,10 +316,12 @@ def decode(bitArray):
     dataLength = infoByte >> 2
 
     numBytes = ceil(dataLength / 8)
-    finalData = ""
-    for byte in bytes[2:2+numBytes]:
-        finalData += chr(byte)
-    # finalData = chr(b) from b inbytes[2:2+numBytes]
+
+    finalData = bytes[2:2+numBytes]
+    
+    if(sectorId < 0 or sectorId > 3):
+        print("Invalid read!")
+        return None
 
     if(readChecksum != checksum):
         print("Checksums don't match!")

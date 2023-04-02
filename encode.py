@@ -9,10 +9,10 @@ import time
 text = "TESTE"
 bitArr = en.strToBitArray(text, 40)
 byteArr = en.bitArrayToByteArray(bitArr)
-encodedData1 = en.byteArrayToBitArray(en.encode(byteArr, 40, 1))
-encodedData2 = en.byteArrayToBitArray(en.encode(byteArr, 40, 2))
-encodedData3 = en.byteArrayToBitArray(en.encode(byteArr, 40, 3))
-encodedData4 = en.byteArrayToBitArray(en.encode(byteArr, 40, 4))
+encodedData1 = en.byteArrayToBitArray(en.encode(byteArr, 40, 0))
+encodedData2 = en.byteArrayToBitArray(en.encode(byteArr, 40, 1))
+encodedData3 = en.byteArrayToBitArray(en.encode(byteArr, 40, 2))
+encodedData4 = en.byteArrayToBitArray(en.encode(byteArr, 40, 3))
 
 img = Image.open("test.png", mode="r", formats=None)
 imgDraw = ImageDraw.Draw(img)
