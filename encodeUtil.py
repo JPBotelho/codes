@@ -157,7 +157,7 @@ def readPositions(positions, width, img, opencv, imgdraw):
         #currByte.append(bit)
 
         if(imgdraw is not None):
-            if(bit150 == 1):
+            if(bit120 == 1):
                 circle(imgdraw, pos, 2, (200))
             else:
                 circle(imgdraw, pos, 2, (100))
@@ -226,10 +226,10 @@ def readImage(image):
     maxDist = 465
     amplitude = 65
 
-    reg1 = getPointsInRegion(amplitude, 90, minDist, maxDist, 35)
-    reg2 = getPointsInRegion(amplitude, 0, minDist, maxDist, 35)
-    reg3 = getPointsInRegion(amplitude, 180, minDist, maxDist, 35)
-    reg4 = getPointsInRegion(amplitude, 270, minDist, maxDist, 35)
+    reg1 = getPointsInRegion(amplitude, 90, minDist, maxDist, 30)
+    reg2 = getPointsInRegion(amplitude, 0, minDist, maxDist, 30)
+    reg3 = getPointsInRegion(amplitude, 180, minDist, maxDist, 30)
+    reg4 = getPointsInRegion(amplitude, 270, minDist, maxDist, 30)
 
     readSectors = []
     secondaryReadSectors = []
@@ -271,9 +271,9 @@ def readImage(image):
         maxVal = max(validity, secondValidity, thirdValidity)
         print(f"Sector {i}: {maxVal}%")
 
-        if(maxVal < 95):
+        if(maxVal < 100):
             #continue
-            ret = True
+            ret = False
     return ret
 
 
@@ -338,3 +338,23 @@ def decodeBlock(data):
     data.pop(0)
     
     return data
+
+
+# Blocks are 4 bits data + 4 bits hamming codes
+# This function splits a byte into 2x 4 data regions and encodes them
+# Returns: Array of length 2, each element is a byte-sized block of data + hamming codes
+def encodeByte(b):
+    blocks = []
+    blocks.append(encodeBlock(b[0:4]))
+    blocks.append(encodeBlock(b[4:8]))
+
+    return blocks
+
+def encodeSector(data, sectorNumber):
+    # First byte is encoded as: 
+    #
+    #   SECTOR #  SECTOR #  
+    #
+    # # # # # # # # # # 
+    sectorHalf = bin((sectorNumber << 2) + sectorNumber)
+    return None
