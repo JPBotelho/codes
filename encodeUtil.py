@@ -1,6 +1,8 @@
 from math import cos, sin, pi
 import numpy as np 
 import cv2 as cv
+import random
+
 SIZE = 1000
 CENTER = (SIZE // 2, SIZE // 2)
 
@@ -276,85 +278,82 @@ def readImage(image):
             ret = False
     return ret
 
+def calculateChecksum(data):
+    output = 0b00000000
+    for byte in data:
+        if(byte > 255):
+            print("Not a byte!")
 
-# Returns data with hamming codes
-def encodeData():
-    return None
+        output = output ^ byte
 
-# Encodes a singular block of data with hamming codes
-# 4 bits data
-# 4 bits parity
-def encodeBlock(data):
-    if(len(data) != 4):
-        print("WRONG DATA SIZE")
-        return None
+    return output
 
-    encodedData = [0] * 8
-    p1 = data[0] ^ data[1] ^ data[3]
-    p2 = data[0] ^ data[2] ^ data[3]
-    p3 = data[1] ^ data[2] ^ data[3]
-    p4 = p1 ^ p2 ^ p3 ^ data[0] ^ data[1] ^ data[2] ^ data[3]
-
-    encodedData[0] = p4
-    encodedData[1] = p1
-    encodedData[2] = p2
-    encodedData[4] = p3
-
-    encodedData[3] = data[0]
-    encodedData[5] = data[1]
-    encodedData[6] = data[2]
-    encodedData[7] = data[3]
-    return encodedData
-     
-# returns none if error detected
-def decodeBlock(data):
-    if(len(data) != 8):
-        print("Wrong block size to decode!")
-        return None
-    overallParity = 0
-    errorPos = 0
-    for i in range(1, len(data)):
-        overallParity = overallParity ^ data[i]
-        if data[i] == 1:
-            errorPos = errorPos ^ i
-
-    # Error detected
-    if errorPos is not 0:
-        # Overall parity doesnt match (1 error, fix it)
-        if overallParity != data[0]:
-            wrongBit = data[errorPos]
-            if wrongBit == 1:
-                data[errorPos] = 0
-            else:
-                data[errorPos] = 1
-        # Error detected but overall parity matches: 2 errors
-        else:
-            print("2 errors in block.")
-            return None
-
-    data.pop(4)
-    data.pop(2)
-    data.pop(1)
-    data.pop(0)
+# Max size is 48 bits per sector
+def encode(data, length, id):
+    if(len(data) > 6):
+        print("Too many bytes!")
     
+
+    infoByte = bin((length << 2) + id)
+
+    data.insert(0, int(infoByte, 2))
+    
+
+    while len(data) < 7:
+        data.append(random.randint(0, 255))
+
+    checksum = calculateChecksum(data)
+    data.insert(0, checksum)
     return data
 
+def decode(data):
+    if(len(data) != 64):
+        print("Invalid data length!")
+        return None
+    
+    checksum = 0
+    readChecksum = 0
+    currentByte = 0
+    bytes = []
+    bitsProcessed = 0
+    dataLength = 16
+    sectorId = 0
+    for bit in data:
+        if bitsProcessed == 8:
+            if(len(bytes) == 0):
+                readChecksum = currentByte
+            else:
+                checksum = checksum ^ currentByte
 
-# Blocks are 4 bits data + 4 bits hamming codes
-# This function splits a byte into 2x 4 data regions and encodes them
-# Returns: Array of length 2, each element is a byte-sized block of data + hamming codes
-def encodeByte(b):
-    blocks = []
-    blocks.append(encodeBlock(b[0:4]))
-    blocks.append(encodeBlock(b[4:8]))
+            # Length and id bit
+            if(len(bytes)==1):
+                dataLength = currentByte >> 2
+                sectorId = currentByte & 3
+            
+            bytes.append(currentByte)
+            currentByte = 0
+            bitsProcessed = 0
+        # currentByte.append(bit)
+        currentByte += bit * (1 << (8 - bitsProcessed - 1))
+        bitsProcessed += 1
+    bytes.append(currentByte)
+    checksum = checksum ^ currentByte
 
-    return blocks
+    if(readChecksum != checksum):
+        print(f"Checksums don't match!: {readChecksum} vs {checksum}")
 
-def encodeSector(data, sectorNumber):
-    # First byte is encoded as: 
-    #
-    #   SECTOR #  SECTOR #  
-    #
-    # # # # # # # # # # 
-    sectorHalf = bin((sectorNumber << 2) + sectorNumber)
-    return None
+        return None
+
+    print(f"Data Length: {dataLength}")
+    print(f"Sector: {sectorId}")
+
+    return bytes
+
+def byteArrayToBitArray(data):
+    output = []
+    for byte in data:
+        bits = bin(byte)[2:]
+        bits = '00000000'[len(bits):] + bits
+        output.extend([int(b) for b in bits])
+
+    return output
