@@ -306,12 +306,28 @@ def encode(data, length, id):
     data.insert(0, checksum)
     return data
 
+def bitArrayToByteArray(data):
+    bytes = []
+
+    currentVal = 0
+    bitsProcessed = 0
+    for bit in bytes:
+        bitsProcessed += 1
+        currentVal += bit * (1 << (8 - bitsProcessed - 1))
+
+        if bitsProcessed == 8:
+            bytes.add(currentVal)
+            currentVal = 0
+            bitsProcessed = 0
+
+    return bytes
+
 def decode(data):
     if(len(data) != 64):
         print("Invalid data length!")
         return None
     
-    checksum = 0
+    calculatedChecksum = 0
     readChecksum = 0
     currentByte = 0
     bytes = []
@@ -319,28 +335,27 @@ def decode(data):
     dataLength = 16
     sectorId = 0
     for bit in data:
+        dataLength-= 1
+        currentByte += bit * (1 << (8 - bitsProcessed - 1))
+        bitsProcessed += 1
         if bitsProcessed == 8:
             if(len(bytes) == 0):
                 readChecksum = currentByte
             else:
-                checksum = checksum ^ currentByte
+                calculatedChecksum = calculatedChecksum ^ currentByte
 
             # Length and id bit
             if(len(bytes)==1):
-                dataLength = currentByte >> 2
+                dataLength += currentByte >> 2
                 sectorId = currentByte & 3
-            
-            bytes.append(currentByte)
+
+            if(dataLength > 0):
+                bytes.append(currentByte)
             currentByte = 0
             bitsProcessed = 0
-        # currentByte.append(bit)
-        currentByte += bit * (1 << (8 - bitsProcessed - 1))
-        bitsProcessed += 1
-    bytes.append(currentByte)
-    checksum = checksum ^ currentByte
 
-    if(readChecksum != checksum):
-        print(f"Checksums don't match!: {readChecksum} vs {checksum}")
+    if(readChecksum != calculatedChecksum):
+        print(f"Checksums don't match!: {readChecksum} vs {calculatedChecksum}")
 
         return None
 
