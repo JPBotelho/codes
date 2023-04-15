@@ -16,9 +16,15 @@
     <circle cx="778" cy="778" r="53.5" stroke="black" stroke-width="15" fill="None"/>
    
    
-    <circle cx="500" cy="500" r="486" stroke="black" stroke-width="24" fill="None" />
+    <circle cx="500" cy="500" r="492" stroke="black" stroke-width="12" fill="None" />
 
-    <circle cx="500" cy="500" r="300" stroke="black" stroke-width="24" fill="None" />
+    <circle cx="500" cy="500" r="300" stroke="black" stroke-width="12" fill="None" />
     
-  
+    <rect x="67" y="290" width="120" height="420" fill="red" />
+    
+    <rect x="810" y="290" width="120" height="420" fill="red" />
+
+    <rect y="810" x="290" height="120" width="420" fill="red" />
+    <rect x="290" y="67" width="420" height="120" fill="red" />
+
 </svg>

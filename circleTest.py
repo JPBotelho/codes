@@ -6,6 +6,7 @@ from math import ceil, atan2
 import util as u
 import copy
 import encodeUtil as en
+import cvExt as cvext
 
 cap = cv.VideoCapture(0)
 paused = False
@@ -24,30 +25,15 @@ while(True):
 
         if circles is not None and circles.size / 3 >= 4:
             circles = np.uint16(np.around(circles))
-            finderPatterns = []
+            finderPatterns = cvext.finderPatterns(processedImage, circles)
 
-            # Check if found circles are finder patterns
-            for i in circles[0, :]:
+            for i in finderPatterns:
+                cv.circle(src, i[0], 1, (0, 0, 255), 3)
+                cv.circle(src, i[0], i[1]//2, (0, 0, 255), 3)
 
-                #i -> (x, y, radius)
-                center = (i[0], i[1])
-               
-                patFinder = u.processPoint(processedImage, i)
-                if patFinder is None:
-                    continue
-
-                # Old circle center and circumference
-                cv.circle(src, center, 1, (0, 0, 255), 3)
-                cv.circle(src, center, i[2], (0, 0, 255), 3)
-
-                finderPatterns.append(patFinder[0])
-
-                # Circle aligned center
-                # cv.circle(src, patFinder[0], 1, (0, 255, 0), 3)
-                # cv.circle(src, patFinder[0], patFinder[1]//2, (0, 255, 0), 3)
 
             cv.putText(src, f"Valid circles: {len(finderPatterns)}/{circles.size/3}", (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-            
+
             if len(finderPatterns) == 4:
                 # (x, y)
                 sqrCenter = u.getCenter(finderPatterns)
@@ -59,7 +45,7 @@ while(True):
                 corners = []
                 for i in range(0, len(finderPatterns), 1):
                     cornerEst = u.extendPoint(finderPatterns[i], sqrCenter, 1.3 )
-                    newPos = finderPatterns[i]
+                    newPos = finderPatterns[i][0]
                     if not u.checkBounds(cornerEst, src):
                         break
                     corners.append(newPos)
