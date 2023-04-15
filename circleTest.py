@@ -59,11 +59,15 @@ while(True):
 
                     # gray = cv.cvtColor(original, cv.COLOR_BGR2GRAY)
                     final = u.transformImage(floatCorners, original)
-                    final = cv.cvtColor(final, cv.COLOR_BGR2GRAY)
                     final = cv.flip(final, 0)
-                    text = en.decodeDataUTF(final, 67, 290, 120, 420, 15)
+                    pg = final
+                    
+                    final = cv.cvtColor(final, cv.COLOR_BGR2GRAY)
+
+                    text = en.decodeDataUTF(pg, final, 67, 290, 120, 420, 30)
+                    # en.drawPos(final, 67, 290, 120, 420, 30)
                     print(text)
-                    cv.imshow("ya", final)
+                    cv.imshow("ya", pg)
 
 
 
