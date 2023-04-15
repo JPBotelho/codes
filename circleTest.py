@@ -5,7 +5,6 @@ import numpy as np
 from math import ceil, atan2
 import util as u
 import copy
-import encodeUtil as en
 import cvExt as cvext
 
 cap = cv.VideoCapture(0)
@@ -61,19 +60,7 @@ while(True):
                     final = u.transformImage(floatCorners, original)
                     final = cv.cvtColor(final, cv.COLOR_BGR2GRAY)
                     final = cv.flip(final, 0)
-                    readData = en.readImage(final)
-                    if readData is not None:
-                        paused = True
-                        #print(f"Sector: {readData[0]}")
-                        #print(f"Length: {readData[1]}")
-                        print(f"Data: {readData}")
-                        cv.imshow("Output", final)
-                        cv.imwrite("out.png", final)
-
-                        # for i in range(len(corners)):
-                            # cv.circle(src, corners[i], 5, (0, 0, 255), 3)
-                            # cv.putText(src, f"{i}", corners[i], cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-                            # i += 1
+                    cv.imshow("ya", final)
 
 
 
