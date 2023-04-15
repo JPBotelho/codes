@@ -6,6 +6,7 @@ from math import ceil, atan2
 import util as u
 import copy
 import cvExt as cvext
+import encodeUtil as en
 
 cap = cv.VideoCapture(0)
 paused = False
@@ -51,7 +52,7 @@ while(True):
 
                 if len(corners) == 4:
                     print("\nEVALUATING NEW THINGS -----")
-                    
+                    paused = True                                                                                   
 
                     corners = sorted(corners, key=lambda c1: u.calcAngle((c1[0], c1[1]), sqrCenter))
                     floatCorners = np.float32(corners)
@@ -60,6 +61,8 @@ while(True):
                     final = u.transformImage(floatCorners, original)
                     final = cv.cvtColor(final, cv.COLOR_BGR2GRAY)
                     final = cv.flip(final, 0)
+                    text = en.decodeDataUTF(final, 67, 290, 120, 420, 15)
+                    print(text)
                     cv.imshow("ya", final)
 
 
